@@ -49,8 +49,8 @@ void setup()
     Serial.print(".");
   }
   
-  setShunt(pzemSlaveAddr);                            // ตั้งค่า shunt
-  changeAddress(0xF8, pzemSlaveAddr);                 // ตั้งค่า address 0x01 ซื่งเป็นค่า default ของตัว PZEM-017
+  // setShunt(pzemSlaveAddr);                            // ตั้งค่า shunt
+  // changeAddress(0xF8, pzemSlaveAddr);                 // ตั้งค่า address 0x01 ซื่งเป็นค่า default ของตัว PZEM-017
   // resetEnergy();                                   // รีเซ็ตค่า Energy[Wh] (หน่วยใช้ไฟสะสม)
 
 
@@ -91,13 +91,7 @@ void loop()
     Serial.print("Power : "); Serial.print(PZEMPower); Serial.println(" W ");
     Serial.print("Energy : "); Serial.print(PZEMEnergy); Serial.println(" Wh ");
 
-    startMillisPZEM = currentMillisPZEM ;                                                       /* Set the starting point again for next counting time */
-  }
-}
-
-void preTransmission()                                                                                    /* transmission program when triggered*/
-{
-  /* 1- PZEM-017 DC Energy Meter */
+    startMillisPZEM = currentMillisPZEM ;                                                       /* Set the starting point again for next counting time */F
   if (millis() - startMillis1 > 5000)                                                               // Wait for 5 seconds as ESP Serial cause start up code crash
   {
     digitalWrite(MAX485_RE, 1);                                                                     /* put RE Pin to high*/
