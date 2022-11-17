@@ -127,6 +127,7 @@ void loop()
             } 
               else
                 {
+                  Serial.println("FAILED TO OBTAIN DATA!");
                 }
               startMillisPZEM = currentMillisPZEM ;                                                       /* Set the starting point again for next counting time */
         }
