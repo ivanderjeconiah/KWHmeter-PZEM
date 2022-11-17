@@ -17,7 +17,7 @@
         /* Virtual Serial Port */
 
         #include <SoftwareSerial.h>                           /* include virtual Serial Port coding */
-        SoftwareSerial PZEMSerial;                            // Move the PZEM DC Energy Meter communication pins from Rx to pin D1 = GPIO 5 & TX to pin D2 = GPIO 4
+        SoftwareSerial PZEMSerial(4,0);                            // Move the PZEM DC Energy Meter communication pins from Rx to pin D1 = GPIO 5 & TX to pin D2 = GPIO 4
 
         /* 0- Blynk Server and Wifi Connection */
 
@@ -64,7 +64,7 @@ void setup()
         startMillis1 = millis();
         
         Serial.begin(9600);                                   /* To assign communication port to communicate with meter. with 2 stop bits (refer to manual)*/
-        PZEMSerial.begin(9600,SWSERIAL_8N2,4,0);              // 4 = Rx/R0/ GPIO 4 (D2) & 0 = Tx/DI/ GPIO 0 (D3) on NodeMCU 
+        PZEMSerial.begin(9600);              // 4 = Rx/R0/ GPIO 4 (D2) & 0 = Tx/DI/ GPIO 0 (D3) on NodeMCU 
         Blynk.begin(auth, ssid, pass);    
 
         /* 1- PZEM-017 DC Energy Meter */
