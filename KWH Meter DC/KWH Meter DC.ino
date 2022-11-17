@@ -17,7 +17,7 @@
         /* Virtual Serial Port */
 
         #include <SoftwareSerial.h>                           /* include virtual Serial Port coding */
-        SoftwareSerial PZEMSerial;                            // Move the PZEM DC Energy Meter communication pins from Rx to pin D1 = GPIO 5 & TX to pin D2 = GPIO 4
+        SoftwareSerial PZEMSerial(D3,D2);                            // Move the PZEM DC Energy Meter communication pins from Rx to pin D1 = GPIO 5 & TX to pin D2 = GPIO 4
 
         /* 0- Blynk Server and Wifi Connection */
 
@@ -30,8 +30,8 @@
         /* 1- PZEM-017 DC Energy Meter */
         
         #include <ModbusMaster.h>                             // Load the (modified) library for modbus communication command codes. Kindly install at our website.
-        #define MAX485_DE  16                                 // Define DE Pin to Arduino pin. Connect DE Pin of Max485 converter module to Pin D0 (GPIO 16) Node MCU board
-        #define MAX485_RE  5                                  // Define RE Pin to Arduino pin. Connect RE Pin of Max485 converter module to Pin D1 (GIPO 5) Node MCU board
+        #define MAX485_DE  D0                                 // Define DE Pin to Arduino pin. Connect DE Pin of Max485 converter module to Pin D0 (GPIO 16) Node MCU board
+        #define MAX485_RE  D1                                 // Define RE Pin to Arduino pin. Connect RE Pin of Max485 converter module to Pin D1 (GIPO 5) Node MCU board
                                                               // These DE anr RE pins can be any other Digital Pins to be activated during transmission and reception process.
         static uint8_t pzemSlaveAddr = 0x01;                  // Declare the address of device (meter 1) in term of 8 bits. 
         static uint16_t NewshuntAddr = 0x0000;                // Declare your external shunt value for DC Meter. Default 0x0000 is 100A, replace to "0x0001" if using 50A shunt, 0x0002 is for 200A, 0x0003 is for 300A
@@ -64,7 +64,7 @@ void setup()
         startMillis1 = millis();
         
         Serial.begin(9600);                                   /* To assign communication port to communicate with meter. with 2 stop bits (refer to manual)*/
-        PZEMSerial.begin(9600,SWSERIAL_8N2,4,0);              // 4 = Rx/R0/ GPIO 4 (D2) & 0 = Tx/DI/ GPIO 0 (D3) on NodeMCU 
+        PZEMSerial.begin(9600);              // 4 = Rx/R0/ GPIO 4 (D2) & 0 = Tx/DI/ GPIO 0 (D3) on NodeMCU 
         Blynk.begin(auth, ssid, pass);    
 
         /* 1- PZEM-017 DC Energy Meter */
