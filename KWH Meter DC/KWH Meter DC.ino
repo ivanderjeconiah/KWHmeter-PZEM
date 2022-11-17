@@ -17,16 +17,21 @@
         /* Virtual Serial Port */
 
         #include <SoftwareSerial.h>                           /* include virtual Serial Port coding */
-        SoftwareSerial PZEMSerial(D6,D5);                            // Move the PZEM DC Energy Meter communication pins from Rx to pin D1 = GPIO 5 & TX to pin D2 = GPIO 4
+        SoftwareSerial PZEMSerial;                            // Move the PZEM DC Energy Meter communication pins from Rx to pin D1 = GPIO 5 & TX to pin D2 = GPIO 4
 
         /* 0- Blynk Server and Wifi Connection */
-                         // Key in your wifi password.
+
+        #include <ESP8266WiFi.h>                              // Enable the use of wifi module. Make sure you downloaded and installed the ESP8266 library
+        #include <BlynkSimpleEsp8266.h>                       
+        char auth[] = "H69ULqGnrCSkdx1wbz303k8IM4mABVOW";     // Put in the Auth Token for the project from Blynk. You should receive it in your email.
+        char ssid[] = "steven";                  // Key in your wifi name. You can check with your smart phone for your wifi name
+        char pass[] = "steven123";                             // Key in your wifi password.
 
         /* 1- PZEM-017 DC Energy Meter */
         
         #include <ModbusMaster.h>                             // Load the (modified) library for modbus communication command codes. Kindly install at our website.
-        #define MAX485_DE  D1                                 // Define DE Pin to Arduino pin. Connect DE Pin of Max485 converter module to Pin D0 (GPIO 16) Node MCU board
-        #define MAX485_RE  D2                                 // Define RE Pin to Arduino pin. Connect RE Pin of Max485 converter module to Pin D1 (GIPO 5) Node MCU board
+        #define MAX485_DE  16                                 // Define DE Pin to Arduino pin. Connect DE Pin of Max485 converter module to Pin D0 (GPIO 16) Node MCU board
+        #define MAX485_RE  5                                  // Define RE Pin to Arduino pin. Connect RE Pin of Max485 converter module to Pin D1 (GIPO 5) Node MCU board
                                                               // These DE anr RE pins can be any other Digital Pins to be activated during transmission and reception process.
         static uint8_t pzemSlaveAddr = 0x01;                  // Declare the address of device (meter 1) in term of 8 bits. 
         static uint16_t NewshuntAddr = 0x0000;                // Declare your external shunt value for DC Meter. Default 0x0000 is 100A, replace to "0x0001" if using 50A shunt, 0x0002 is for 200A, 0x0003 is for 300A
@@ -59,7 +64,8 @@ void setup()
         startMillis1 = millis();
         
         Serial.begin(9600);                                   /* To assign communication port to communicate with meter. with 2 stop bits (refer to manual)*/
-        PZEMSerial.begin(9600);              // 4 = Rx/R0/ GPIO 4 (D2) & 0 = Tx/DI/ GPIO 0 (D3) on NodeMCU   
+        PZEMSerial.begin(9600,SWSERIAL_8N2,4,0);              // 4 = Rx/R0/ GPIO 4 (D2) & 0 = Tx/DI/ GPIO 0 (D3) on NodeMCU 
+        Blynk.begin(auth, ssid, pass);    
 
         /* 1- PZEM-017 DC Energy Meter */
 
@@ -84,6 +90,8 @@ void loop()
 {
         
         /* 0- General */
+        
+        Blynk.run();
        
         if ((millis()- startMillis1 >= 10000) && (a ==1))
         {
@@ -119,7 +127,6 @@ void loop()
             } 
               else
                 {
-                  Serial.println("FAILED TO OBTAIN DATA!");
                 }
               startMillisPZEM = currentMillisPZEM ;                                                       /* Set the starting point again for next counting time */
         }
@@ -133,7 +140,10 @@ void loop()
             Serial.print("Idc : "); Serial.print(PZEMCurrent); Serial.println(" A ");
             Serial.print("Power : "); Serial.print(PZEMPower); Serial.println(" W ");
             Serial.print("Energy : "); Serial.print(PZEMEnergy); Serial.println(" Wh ");
-  
+            Blynk.virtualWrite(V7,PZEMVoltage);                                                           // Send data to Blynk Server. Voltage value as virtual pin V0
+            Blynk.virtualWrite(V8,PZEMCurrent);
+            Blynk.virtualWrite(V9,PZEMPower);
+            Blynk.virtualWrite(V10,PZEMEnergy);
             startMillisReadData = millis();
           }
           
@@ -193,6 +203,25 @@ void setShunt(uint8_t slaveAddr)                                                
         delay(100);
 }
 
+BLYNK_WRITE(V11)                                               // Virtual push button to reset energy for Meter 1 
+{
+        if(param.asInt()==1)
+          { 
+            uint16_t u16CRC = 0xFFFF;                         /* declare CRC check 16 bits*/
+            static uint8_t resetCommand = 0x42;               /* reset command code*/
+            uint8_t slaveAddr = pzemSlaveAddr;                 // if you set different address, make sure this slaveAddr must change also
+            u16CRC = crc16_update(u16CRC, slaveAddr);
+            u16CRC = crc16_update(u16CRC, resetCommand);
+            preTransmission();                                /* trigger transmission mode*/                
+            PZEMSerial.write(slaveAddr);                      /* send device address in 8 bit*/
+            PZEMSerial.write(resetCommand);                   /* send reset command */
+            PZEMSerial.write(lowByte(u16CRC));                /* send CRC check code low byte  (1st part) */
+            PZEMSerial.write(highByte(u16CRC));               /* send CRC check code high byte (2nd part) */ 
+            delay(10);
+            postTransmission();                               /* trigger reception mode*/
+            delay(100);
+          }
+}
 
 void changeAddress(uint8_t OldslaveAddr, uint8_t NewslaveAddr)                                            //Change the slave address of a node
 {
